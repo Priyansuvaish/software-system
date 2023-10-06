@@ -1,2 +1,0 @@
-# software-system
-ss lab
