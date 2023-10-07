@@ -18,7 +18,7 @@ int main() {
         char mtext[80];
     }msg1;
     printf("enter the message type");
-    scanf("%ld",msg1.mtype);
+    scanf("%ld",&msg1.mtype);
     
     printf("enter the message:");
     scanf("%s",msg1.mtext);
