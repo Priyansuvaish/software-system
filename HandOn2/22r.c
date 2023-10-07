@@ -1,5 +1,5 @@
 /*
-Name : 20r.c
+Name : 22r.c
 Author : Priyanhu vaish
 Description : Write two programs so that both can communicate by FIFO -Use one way communication.
 Date: 4th Oct, 2023.

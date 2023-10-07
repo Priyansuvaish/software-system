@@ -1,8 +1,8 @@
 /*
-Name : 15.c
+Name : 27b.c
 Author : Priyanshu Vaish
 Description : Write a program to receive messages from the message queue.
-        a. with 0 as a flag
+        b. with IPC_NOWAIT as a flag
 */
 #include <sys/msg.h>
 #include <stdio.h>

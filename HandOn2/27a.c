@@ -1,5 +1,5 @@
 /*
-Name : 15.c
+Name : 27a.c
 Author : Priyanshu Vaish
 Description : Write a program to receive messages from the message queue.
         a. with 0 as a flag

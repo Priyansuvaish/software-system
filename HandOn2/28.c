@@ -1,6 +1,6 @@
 /*
-Name : 15.c
-Author : Dibyarup Pal
+Name : 28.c
+Author : Priyanshu Vaish
 Description :Write a program to change the exiting message queue permission. (use msqid_ds structure)
 */
 #include <sys/msg.h>

@@ -1,3 +1,10 @@
+/*
+Name : 14.c
+Author : Priyanshu Vaish
+Description : Write a simple program to create a pipe, write to the pipe, read from pipe
+              and display on the monitor.
+
+*/
 #include <stdlib.h>
 #include<stdio.h>
 #include<unistd.h>

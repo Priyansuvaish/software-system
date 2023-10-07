@@ -1,5 +1,5 @@
 /*
-Name : 15.c
+Name : 31a.c
 Author : Priyanshu Vaish
 Description : Write a program to create a semaphore and initialize value to the semaphore.
          a. create a binary semaphore

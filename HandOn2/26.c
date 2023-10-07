@@ -1,5 +1,5 @@
 /*
-Name : 23.c
+Name : 26.c
 Author : Priyanshu Vaish
 Description : Write a program to send messages to the message queue. Check $ipcs -q
 */

@@ -1,7 +1,7 @@
-/*Name : 30c.c
+/*Name : 30d.c
 Author : Priyanshu Vaish
 Description :Write a program to create a shared memory.
-         c. detach the shared memory
+         d. remove the shared memory
 */
 #include <sys/shm.h>
 #include <errno.h>

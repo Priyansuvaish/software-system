@@ -1,5 +1,5 @@
 /*
-Name : 20.c
+Name : 22w.c
 Author : Priyanshu Vaish
 Description : Write two programs so that both can communicate by FIFO -Use one way communication.
 Date: 4th Oct, 2023.

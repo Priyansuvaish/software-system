@@ -2,7 +2,7 @@
 Name : 31b.c
 Author : Priyanshu Vaish
 Description : Write a program to create a semaphore and initialize value to the semaphore.
-         a. create a counting semaphore
+         b. create a counting semaphore
 */
 #include <sys/types.h>
 #include <sys/ipc.h>

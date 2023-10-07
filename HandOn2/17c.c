@@ -1,6 +1,6 @@
 /*
 Name : 17c.c
-Author : Priyanshu VAish
+Author : Priyanshu Vaish
 Description : Write a program to execute ls -l | wc.
 		c. use fcntl
 Date: 2nd Oct, 2023.
