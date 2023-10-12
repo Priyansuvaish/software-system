@@ -49,11 +49,10 @@ while (1)
                 break;
             case 6:
               writeBytes = write(connFD, "ADMIN_LOGOUT", 12);
-              connection_handler(connFD);
-                break;
+              return false;
             default:
                 writeBytes = write(connFD, "incorrect option", 16);
-                return false;
+                break;
             }
         }
     }

@@ -1,4 +1,5 @@
-
+#ifndef FUNCTIONS
+#define FUNCTIONS
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -20,8 +21,8 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
     char readBuffer[1000], writeBuffer[1000];
     char tempBuffer[1000];
     int i;
-    struct professor p;
-    struct student s;
+    struct professor p={0};
+    struct student s={0};
 
     bzero(readBuffer, sizeof(readBuffer));
     bzero(writeBuffer, sizeof(writeBuffer));
@@ -56,12 +57,13 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
     {
         i = 0;
         off_t offset ;
-        int customerFileFD = open("professor.txt",O_RDONLY);
+        int customerFileFD = open("./professor.txt",O_RDONLY);
         if (customerFileFD == -1)
         {
             perror("Error opening customer file in read mode!");
             return false;
         }
+
          while(read(customerFileFD,&p,sizeof(struct professor)))
         {
           if(strcmp(p.login,readBuffer)!=0)
@@ -69,7 +71,7 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
             i=i+1;
            offset= lseek(customerFileFD, i*sizeof(struct professor),SEEK_SET);
           }
-	  else userFound=true;
+	  else {userFound=true;break;}
 	}
           close(customerFileFD);
 	 if(userFound == false)
@@ -79,7 +81,7 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
     {
         i = 0;
 
-        int studentFileFD = open("student.txt",O_RDONLY);
+        int studentFileFD = open("./student.txt",O_RDONLY);
         if (studentFileFD == -1)
         {
             perror("Error opening customer file in read mode!");
@@ -92,7 +94,9 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
             i=i+1;
            lseek(studentFileFD,i*sizeof(struct professor),SEEK_SET);
           }
-          else userFound=true;
+          else{
+		 userFound=true;break;
+	      }
         }
             close(studentFileFD);
     }
@@ -121,7 +125,7 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
             }
         }
         if(type == 2)
-        {
+        { 
             if (strcmp(readBuffer, p.password) == 0)
             {
                 *proff =p;
@@ -154,15 +158,15 @@ int add_account(int connFD, int type)
     ssize_t readBytes, writeBytes;
     char readBuffer[1000], writeBuffer[1000];
 
-    struct professor  p,pp;
-    struct student   s,ss;
+    struct professor  pn={0},pp={0};
+    struct student   sn={0},ss={0};
     if(type == 1)
     {  
        int accountFileDescriptor = open("professor.txt", O_RDONLY);
     if (accountFileDescriptor == -1 && errno == ENOENT)
     {
         // Account file was never created
-        p.id = 0;
+        pn.id = 0;
     }
     else if (accountFileDescriptor == -1)
     {
@@ -195,10 +199,10 @@ int add_account(int connFD, int type)
 
         lock.l_type = F_UNLCK;
         fcntl(accountFileDescriptor, F_SETLK, &lock);
-
+        lseek(accountFileDescriptor, 0, SEEK_SET);
         close(accountFileDescriptor);
 
-        p.id = pp.id + 1;
+        pn.id = pp.id + 1;
     }
        
        writeBytes = write(connFD, "Enter the name\n", 16);
@@ -215,7 +219,7 @@ int add_account(int connFD, int type)
         return false;
        }
 
-       strcpy(p.name, readBuffer);
+       strcpy(pn.name, readBuffer);
 
        bzero(writeBuffer, sizeof(writeBuffer));
        strcpy(writeBuffer, "Enter the age");
@@ -248,7 +252,7 @@ int add_account(int connFD, int type)
         readBytes = read(connFD, readBuffer, sizeof(readBuffer)); // Dummy read
         return false;
         }
-        p.age = Age;
+        pn.age = Age;
 
         writeBytes = write(connFD, "Enter the username\n", 20);
         if (writeBytes == -1)
@@ -264,7 +268,7 @@ int add_account(int connFD, int type)
          return false;
         }
 
-        strcpy(p.login, readBuffer);
+        strcpy(pn.login, readBuffer);
 
         writeBytes = write(connFD, "Enter the password\n", 20);
         if (writeBytes == -1)
@@ -280,7 +284,7 @@ int add_account(int connFD, int type)
          return false;
         }
 
-        strcpy(p.password, readBuffer);
+        strcpy(pn.password, readBuffer);
 
         int professorFileDescriptor = open("professor.txt", O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
         if (professorFileDescriptor == -1)
@@ -288,7 +292,7 @@ int add_account(int connFD, int type)
          perror("Error while creating / opening customer file!");
          return false;
         }
-        writeBytes = write(professorFileDescriptor, &p, sizeof(p));
+        writeBytes = write(professorFileDescriptor, &pn, sizeof(pn));
         if (writeBytes == -1)
         {
          perror("Error while writing Customer record to file!");
@@ -304,7 +308,7 @@ int add_account(int connFD, int type)
     if (accountFileDescriptor == -1 && errno == ENOENT)
     {
         // Account file was never created
-        s.id = 0;
+        sn.id = 0;
     }
     else if (accountFileDescriptor == -1)
     {
@@ -340,7 +344,7 @@ int add_account(int connFD, int type)
 
         close(accountFileDescriptor);
 
-        s.id = ss.id + 1;
+        sn.id = ss.id + 1;
     }
        writeBytes = write(connFD, "Enter the name\n", 16);
        if (writeBytes == -1)
@@ -356,7 +360,7 @@ int add_account(int connFD, int type)
         return false;
        }
 
-       strcpy(s.name, readBuffer);
+       strcpy(sn.name, readBuffer);
 
        bzero(writeBuffer, sizeof(writeBuffer));
        strcpy(writeBuffer, "Enter the age");
@@ -389,9 +393,9 @@ int add_account(int connFD, int type)
         readBytes = read(connFD, readBuffer, sizeof(readBuffer)); // Dummy read
         return false;
         }
-        s.age = Age;
+        sn.age = Age;
 
-        s.active = true;
+        sn.active = true;
 
         writeBytes = write(connFD, "Enter the username\n", 20);
         if (writeBytes == -1)
@@ -407,7 +411,7 @@ int add_account(int connFD, int type)
          return false;
         }
 
-        strcpy(s.login, readBuffer);
+        strcpy(sn.login, readBuffer);
 
         writeBytes = write(connFD, "Enter the password\n", 20);
         if (writeBytes == -1)
@@ -423,7 +427,7 @@ int add_account(int connFD, int type)
          return false;
         }
 
-        strcpy(s.password, readBuffer);
+        strcpy(sn.password, readBuffer);
 
         int studentFileDescriptor = open("student.txt", O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
         if (studentFileDescriptor == -1)
@@ -431,7 +435,7 @@ int add_account(int connFD, int type)
          perror("Error while creating / opening  file!");
          return false;
         }
-        writeBytes = write(studentFileDescriptor, &s, sizeof(s));
+        writeBytes = write(studentFileDescriptor, &sn, sizeof(sn));
         if (writeBytes == -1)
         {
          perror("Error while writing record to file!");
@@ -450,7 +454,8 @@ int add_account(int connFD, int type)
        }
 
     if(type = 1)
-    return p.id;
-    else return s.id;
+    return pn.id;
+    else return sn.id;
 }
 
+#endif

@@ -1,5 +1,3 @@
-#ifndef RECORD
-#define RECORD
 
 struct professor
 {
@@ -25,8 +23,7 @@ struct student
 
 struct Course
 {
-    int id;
     char name[25];
     char facultyname[50];
+    bool active;
 };
-#endif

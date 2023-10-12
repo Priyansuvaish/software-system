@@ -77,7 +77,8 @@ void connection_handler(int connectionFileDescriptor)
     char readBuffer[1000], writeBuffer[1000];
     ssize_t readBytes, writeBytes;
     int userChoice;
-    char  start[]="welcome to acadamia portal\nLogin as \nenter 1 for admin\nenter 2 for profeeser\nenter 3 for student";
+    while(1){
+    char  start[]="\nwelcome to acadamia portal\nLogin as \nenter 1 for admin\nenter 2 for profeeser\nenter 3 for student";
     writeBytes = write(connectionFileDescriptor, start, strlen(start));
     if (writeBytes == -1)
         perror("Error while sending first prompt to the user!");
@@ -105,11 +106,14 @@ void connection_handler(int connectionFileDescriptor)
             case 3: 
                 student_operation_handler(connectionFileDescriptor);
                 break;
+	    case 4: 
+               printf("close the connection to client!\n");
+	    return;
             default:
-               // Exit;
+               writeBytes = write(connectionFileDescriptor, "incorrect option", 16);
                 break;
             }
+	 }
         }
     }
-    printf("close the connection to client!\n");
 }

@@ -4,7 +4,7 @@
 
 struct student s;
 int semIdentifier;
-
+int view_all(int connFD);
 bool student_operation_handler(int connFD)
 {
 
@@ -14,7 +14,7 @@ bool student_operation_handler(int connFD)
         char readBuffer[1000], writeBuffer[1000]; // A buffer used for reading & writing to the client
 
         // Get a semaphore for the user
-        key_t semKey = ftok("./professor.txt", s.id); // Generate a key based on the account number hence, different customers will have different semaphores
+        key_t semKey = ftok("./professor.txt", s.id); 
 
         union semun
         {
@@ -66,7 +66,7 @@ while (1)
             switch (choice)
             {
             case 1:
-//                 add_account(connFD,2);
+                 view_all(connFD);
                 break;
             case 2:
   //               add_account(connFD,1);
@@ -82,11 +82,10 @@ while (1)
                 break;
             case 6:
                 writeBytes = write(connFD, "student logout", 14);
-                connection_handler(connFD);
-                break;
+                return false;
             default:
                 writeBytes = write(connFD, "incorrect option", 16);
-                return false;
+                break;
             }
         }
     }
@@ -98,3 +97,30 @@ while (1)
     return true;
 }
 
+int view_all(int connFD)
+{
+ int i=0;
+     char readBuffer[1000], writeBuffer[1000];
+      ssize_t writeBytes, readBytes;
+     int sD = open("course.txt", O_RDONLY);
+        if (sD == -1)
+        {
+         perror("Error while creating / opening file!");
+         return 0;
+        }
+        struct Course pp={0};
+         bzero(writeBuffer, sizeof(writeBuffer));
+         strcpy(writeBuffer,"course name\tfaculty name\n");
+         write(connFD, writeBuffer, strlen(writeBuffer));
+
+        while(read(sD,&pp,sizeof(struct Course))>0)
+        {
+            i=i+1;
+	    if(pp.active){
+            bzero(writeBuffer, sizeof(writeBuffer));
+            sprintf(writeBuffer, "%s\t\t%s\n", pp.name,pp.facultyname);
+            writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));}
+         lseek(sD , i * sizeof(struct Course) , SEEK_SET);
+        }
+    return 1;
+}
