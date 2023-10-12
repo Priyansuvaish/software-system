@@ -6,7 +6,6 @@ struct professor
     int id;
     char name[25];
     int age;
-    int courseoffered[5];
 
     char login[30]; 
     char password[30];

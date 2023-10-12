@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "./admin.h"
 #include "./professor.h"
+#include "./student.h"
 void connection_handler(int connFD);
 
 void main()
@@ -101,8 +102,11 @@ void connection_handler(int connectionFileDescriptor)
                 // Customer
                 customer_operation_handler(connectionFileDescriptor);
                 break;
+            case 3: 
+                student_operation_handler(connectionFileDescriptor);
+                break;
             default:
-                // Exit
+               // Exit;
                 break;
             }
         }
