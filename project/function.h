@@ -395,6 +395,27 @@ int add_account(int connFD, int type)
         }
         sn.age = Age;
 
+	bzero(writeBuffer, sizeof(writeBuffer));
+       strcpy(writeBuffer, "number of courses student enroll");
+       writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+       if (writeBytes == -1)
+       {
+        perror("Error writing the enroll message ");
+        return false;
+       }
+
+       bzero(readBuffer, sizeof(readBuffer));
+       readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+       if (readBytes == -1)
+       {
+        perror("Error reading the enroll response");
+        return false;
+       }
+
+       int cou = atoi(readBuffer);
+       
+        sn.count = cou;
+
         sn.active = true;
 
         writeBytes = write(connFD, "Enter the username\n", 20);

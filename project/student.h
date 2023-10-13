@@ -5,6 +5,7 @@
 struct student s;
 int semIdentifier;
 int view_all(int connFD);
+bool enroll(int connFD);
 bool student_operation_handler(int connFD)
 {
 
@@ -69,7 +70,7 @@ while (1)
                  view_all(connFD);
                 break;
             case 2:
-  //               add_account(connFD,1);
+                enroll(connFD);
                 break;
             case 3: 
     //            get_transaction_details(connFD, -1);
@@ -81,8 +82,7 @@ while (1)
       //          delete_account(connFD);
                 break;
             case 6:
-                writeBytes = write(connFD, "student logout", 14);
-                return false;
+                close(connFD);
             default:
                 writeBytes = write(connFD, "incorrect option", 16);
                 break;
@@ -123,4 +123,167 @@ int view_all(int connFD)
          lseek(sD , i * sizeof(struct Course) , SEEK_SET);
         }
     return 1;
+}
+bool enroll(int connFD){
+    ssize_t readBytes, writeBytes;
+    char readBuffer[1000], writeBuffer[1000];
+    struct enroll e;
+    struct Course pp;
+    int i=0;
+    off_t off;
+    bool coursefind = false;
+    // Lock the critical section
+    struct sembuf semOp = {0, -1, SEM_UNDO};
+    int semopStatus = semop(semIdentifier, &semOp, 1);
+    if (semopStatus == -1)
+    {
+        perror("Error while locking critical section");
+        return false;
+    }
+    writeBytes = write(connFD, "ENTER course name", 17);
+        if (writeBytes == -1)
+        {
+            perror("Error writing course name");
+            semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+            return false;
+        }
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1)
+        {
+            perror("Error reading course name");
+            semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+            return false;
+        }
+
+    int FileDescriptor = open("./course.txt", O_RDWR);
+            if (FileDescriptor == -1)
+            {
+                perror("Error opening course file!");
+                semOp.sem_op = 1;
+                semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+      while(read(FileDescriptor,&pp,sizeof(struct Course))>0)
+        {
+            i=i+1;
+            if(strcmp(pp.name,readBuffer) == 0){
+             if(pp.active && pp.enrol < pp.total){
+		coursefind = true;
+                strcpy(e.name,pp.name);
+		strcpy(e.facultyname,pp.facultyname);
+		strcpy(e.studentname,s.name);
+		e.active = true;
+		break;
+	    }
+	  }
+         off = lseek(FileDescriptor , i * sizeof(struct Course) , SEEK_SET);
+        }
+	if(coursefind){
+	  if(s.count > 0){
+	    int customerFileDescriptor = open("./student.txt", O_WRONLY);
+            if (customerFileDescriptor == -1)
+            {
+                perror("Error opening student file!");
+                semOp.sem_op = 1;
+                semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+
+            off_t offset = lseek(customerFileDescriptor, s.id * sizeof(struct student), SEEK_SET);
+            if (offset == -1)
+            {
+                perror("Error seeking to the student record!");
+                semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+
+            struct flock lock = {F_WRLCK, SEEK_SET, offset, sizeof(struct student), getpid()};
+            int lockingStatus = fcntl(customerFileDescriptor, F_SETLKW, &lock);
+            if (lockingStatus == -1)
+            {
+                perror("Error obtaining write lock on student record!");
+                semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+	    s.count = s.count - 1;
+
+            writeBytes = write(customerFileDescriptor, &s, sizeof(struct student));
+            if (writeBytes == -1)
+            {
+                perror("Error storing student count");
+                semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+
+            lock.l_type = F_UNLCK;
+            lockingStatus = fcntl(customerFileDescriptor, F_SETLK, &lock);
+
+            close(customerFileDescriptor);
+
+
+	    struct flock loc = {F_WRLCK, SEEK_SET, off, sizeof(struct Course), getpid()};
+            int locking = fcntl(FileDescriptor, F_SETLKW, &loc);
+            if (locking == -1)
+            {
+                perror("Error obtaining write lock on student record!");
+                semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+            pp.enrol = pp.enrol + 1;
+
+            writeBytes = write(FileDescriptor, &pp, sizeof(struct Course));
+            if (writeBytes == -1)
+            {
+                perror("Error storing student count");
+                semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+
+            lock.l_type = F_UNLCK;
+            lockingStatus = fcntl(FileDescriptor, F_SETLK, &lock);
+
+            close(FileDescriptor);
+
+
+	   int enrollFileDescriptor = open("enroll.txt", O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
+        if (enrollFileDescriptor == -1)
+        {
+         perror("Error while creating / opening file!");
+         return false;
+        }
+        writeBytes = write(enrollFileDescriptor, &e, sizeof(e));
+        if (writeBytes == -1)
+        {
+         perror("Error while writing  record to file!");
+         return false;
+        }
+
+       close(enrollFileDescriptor);
+
+		bzero(writeBuffer, sizeof(writeBuffer));
+       		strcpy(writeBuffer, "enroll successfully");
+       		writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+       if (writeBytes == -1)
+       {
+        perror("Error sending enrool message");
+        return false;
+       }
+
+	  }
+	  else{
+		writeBytes = write(connFD, "course enrolled finished", 24);return false;
+	 }
+	}
+        else{
+	    writeBytes = write(connFD, "either course seat are full or course in not exist", 50);return false;
+	}
+	return true;
 }

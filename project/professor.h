@@ -53,7 +53,7 @@ bool customer_operation_handler(int connFD)
             writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
             if (writeBytes == -1)
             {
-                perror("Error while writing ADMIN_MENU to client!");
+                perror("Error while writing ADMIN_MENU");
                 return false;
             }
             bzero(writeBuffer, sizeof(writeBuffer));
@@ -61,7 +61,7 @@ bool customer_operation_handler(int connFD)
             readBytes = read(connFD, readBuffer, sizeof(readBuffer));
             if (readBytes == -1)
             {
-                perror("Error while reading client's choice for ADMIN_MENU");
+                perror("Error while reading choice for ADMIN_MENU");
                 return false;
             }
 
@@ -84,8 +84,7 @@ bool customer_operation_handler(int connFD)
       //          delete_account(connFD);
                 break;
             case 6:
-   	    writeBytes = write(connFD, "professor logout", 16);
-                 return false;
+   	    close(connFD);
             default:
                 writeBytes = write(connFD, "incorrect option", 16);
                 break;
@@ -107,20 +106,40 @@ int add_course(int connFD)
     writeBytes = write(connFD, "Enter the course name\n", 22);
        if (writeBytes == -1)
        {
-         perror("Error writing NAME to client!");
+         perror("Error writing NAME");
          return false;
        }
        bzero(readBuffer, sizeof(readBuffer));
        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
        if (readBytes == -1)
        {
-        perror("Error reading customer name response from client!");
+        perror("Error reading name response");
         return false;
        }
 
        strcpy(c.name, readBuffer);
        strcpy(c.facultyname, pr.name);
-       c.active= true;
+
+       bzero(writeBuffer, sizeof(writeBuffer));
+       strcpy(writeBuffer, "Total Enrollment");
+       writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+       if (writeBytes == -1)
+       {
+        perror("Error writing the total count message ");
+        return false;
+       }
+       
+       bzero(readBuffer, sizeof(readBuffer));
+       readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+       if (readBytes == -1)
+       {
+        perror("Error reading total count response");
+        return false;
+       }
+	int tot=atoi(readBuffer);
+	c.total=tot;
+	c.enrol = 0;
+         c.active= true;
         int studentFileDescriptor = open("course.txt", O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
         if (studentFileDescriptor == -1)
         {
@@ -158,17 +177,17 @@ int view_all_course(int connFD){
         }
 	struct Course pp={0};
 	 bzero(writeBuffer, sizeof(writeBuffer));
-	 strcpy(writeBuffer,"course name\n");
+	 strcpy(writeBuffer,"course name\tTotal\tEnrolled\n");
          write(connFD, writeBuffer, strlen(writeBuffer));
 
-        while(read(sD,&pp,sizeof(struct Course))>0)
-        {
-          if(strcmp(pr.name, pp.facultyname)  ==0)
+        while(read(sD,&pp,sizeof(struct Course)))
+        { 
+          i=i+1;
+          if(strcmp(pr.name, pp.facultyname)==0)
 	  {
 	    if(pp.active){
-            i=i+1;
   	    bzero(writeBuffer, sizeof(writeBuffer));
-            sprintf(writeBuffer, "%s\n", pp.name);
+            sprintf(writeBuffer, "%s\t%d\t%d\n", pp.name,pp.total,pp.enrol);
     	    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
 	  }}
 	 lseek(sD , i * sizeof(struct Course) , SEEK_SET);
@@ -178,7 +197,7 @@ int view_all_course(int connFD){
 bool change_password(int connFD)
 {
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000], hashedPassword[1000];
+    char readBuffer[1000], writeBuffer[1000];
 
     char newPassword[1000];
 

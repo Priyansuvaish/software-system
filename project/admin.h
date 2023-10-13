@@ -48,8 +48,7 @@ while (1)
       //          delete_account(connFD);
                 break;
             case 6:
-              writeBytes = write(connFD, "ADMIN_LOGOUT", 12);
-              return false;
+              close(connFD);break;
             default:
                 writeBytes = write(connFD, "incorrect option", 16);
                 break;
