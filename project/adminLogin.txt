@@ -1,0 +1,4 @@
+Admin id: root
+password: root
+
+The numberof student enroll in different courses is 4(give input while adding the student as 4).
