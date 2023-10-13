@@ -92,7 +92,7 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
           if(strcmp(s.login,readBuffer)!=0)
           {    
             i=i+1;
-           lseek(studentFileFD,i*sizeof(struct professor),SEEK_SET);
+           lseek(studentFileFD,i*sizeof(struct student),SEEK_SET);
           }
           else{
 		 userFound=true;break;

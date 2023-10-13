@@ -84,7 +84,7 @@ bool customer_operation_handler(int connFD)
       //          delete_account(connFD);
                 break;
             case 6:
-   	    close(connFD);
+   	    return true;
             default:
                 writeBytes = write(connFD, "incorrect option", 16);
                 break;

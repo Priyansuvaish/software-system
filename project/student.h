@@ -6,6 +6,8 @@ struct student s;
 int semIdentifier;
 int view_all(int connFD);
 bool enroll(int connFD);
+int view_enroll(int connFD);
+bool changepassword(int connFD);
 bool student_operation_handler(int connFD)
 {
 
@@ -76,13 +78,13 @@ while (1)
     //            get_transaction_details(connFD, -1);
                 break;
             case 4:
-               
+               view_enroll(connFD);
                 break;
             case 5:
-      //          delete_account(connFD);
+                changepassword(connFD);
                 break;
             case 6:
-                close(connFD);
+                return true;
             default:
                 writeBytes = write(connFD, "incorrect option", 16);
                 break;
@@ -121,6 +123,33 @@ int view_all(int connFD)
             sprintf(writeBuffer, "%s\t\t%s\n", pp.name,pp.facultyname);
             writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));}
          lseek(sD , i * sizeof(struct Course) , SEEK_SET);
+        }
+    return 1;
+}
+int view_enroll(int connFD)
+{
+ int i=0;
+     char readBuffer[1000], writeBuffer[1000];
+      ssize_t writeBytes, readBytes;
+     int sD = open("enroll.txt", O_RDONLY);
+        if (sD == -1)
+        {
+         perror("Error while creating / opening file!");
+         return 0;
+        }
+        struct enroll pp={0};
+         bzero(writeBuffer, sizeof(writeBuffer));
+         strcpy(writeBuffer,"course name\tfaculty name\n");
+         write(connFD, writeBuffer, strlen(writeBuffer));
+
+        while(read(sD,&pp,sizeof(struct enroll))>0)
+        {
+            i=i+1;
+	    if(pp.active){
+            bzero(writeBuffer, sizeof(writeBuffer));
+            sprintf(writeBuffer, "%s\t\t%s\n", pp.name,pp.facultyname);
+            writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));}
+         lseek(sD , i * sizeof(struct enroll) , SEEK_SET);
         }
     return 1;
 }
@@ -286,4 +315,123 @@ bool enroll(int connFD){
 	    writeBytes = write(connFD, "either course seat are full or course in not exist", 50);return false;
 	}
 	return true;
+}
+bool changepassword(int connFD)
+{
+    ssize_t readBytes, writeBytes;
+    char readBuffer[1000], writeBuffer[1000];
+
+    char newPassword[1000];
+
+    // Lock the critical section
+    struct sembuf semOp = {0, -1, SEM_UNDO};
+    int semopStatus = semop(semIdentifier, &semOp, 1);
+    if (semopStatus == -1)
+    {
+        perror("Error while locking critical section");
+        return false;
+    }
+
+        // Password matches with old password
+        writeBytes = write(connFD, "ENTER NEW PASSWORD", 18);
+        if (writeBytes == -1)
+        {
+            perror("Error writing PASSWORD_CHANGE_NEW_PASS message to client!");
+            semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+            return false;
+        }
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1)
+        {
+            perror("Error reading new password response from client");
+            semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+            return false;
+        }
+
+        strcpy(newPassword, readBuffer);
+
+        writeBytes = write(connFD, "REENTER NEW PASSWORD", 20);
+        if (writeBytes == -1)
+        {
+            perror("Error writing PASSWORD_CHANGE_NEW_PASS_RE message to client!");
+            semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+            return false;
+        }
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1)
+        {
+            perror("Error reading new password reenter response from client");
+            semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+            return false;
+        }
+
+        if (strcmp(readBuffer, newPassword) == 0)
+        {
+            // New & reentered passwords match
+
+            strcpy(s.password, newPassword);
+
+            int customerFileDescriptor = open("./student.txt", O_WRONLY);
+            if (customerFileDescriptor == -1)
+            {
+                perror("Error opening customer file!");
+                semOp.sem_op = 1;
+                semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+
+            off_t offset = lseek(customerFileDescriptor, s.id * sizeof(struct student), SEEK_SET);
+            if (offset == -1)
+            {
+                perror("Error seeking to the customer record!");
+                semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+
+            struct flock lock = {F_WRLCK, SEEK_SET, offset, sizeof(struct student), getpid()};
+            int lockingStatus = fcntl(customerFileDescriptor, F_SETLKW, &lock);
+            if (lockingStatus == -1)
+            {
+                perror("Error obtaining write lock on customer record!");
+                semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+	    writeBytes = write(customerFileDescriptor, &s, sizeof(struct student));
+            if (writeBytes == -1)
+            {
+                perror("Error storing updated customer password into customer record!");
+                semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+                return false;
+            }
+
+            lock.l_type = F_UNLCK;
+            lockingStatus = fcntl(customerFileDescriptor, F_SETLK, &lock);
+
+            close(customerFileDescriptor);
+
+            writeBytes = write(connFD, "PASSWORD_CHANGE_SUCCESS", 23);
+            readBytes = read(connFD, readBuffer, sizeof(readBuffer)); // Dummy read
+
+            semOp.sem_op = 1;
+            semop(semIdentifier, &semOp, 1);
+
+            return true;
+        }
+        else
+        {
+            // New & reentered passwords don't match
+            writeBytes = write(connFD, "REENTER_PASSWORD_INVALID_NOT_MATCHED", 36);
+            //readBytes = read(connFD, readBuffer, sizeof(readBuffer)); // Dummy read
+        }
+    
+    return false;
 }

@@ -10,8 +10,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "./admin.h"
-#include "./professor.h"
+#include "./ad.h"
+#include "./prof.h"
 #include "./student.h"
 void connection_handler(int connFD);
 
@@ -77,7 +77,8 @@ void connection_handler(int connectionFileDescriptor)
     char readBuffer[1000], writeBuffer[1000];
     ssize_t readBytes, writeBytes;
     int userChoice;
-    while(1){
+    while(1)
+ {
     char  start[]="\nwelcome to acadamia portal\nLogin as \nenter 1 for admin\nenter 2 for profeeser\nenter 3 for student";
     writeBytes = write(connectionFileDescriptor, start, strlen(start));
     if (writeBytes == -1)
@@ -98,22 +99,22 @@ void connection_handler(int connectionFileDescriptor)
             case 1:
                 // Admin
                 admin_operation_handler(connectionFileDescriptor);
-                break;
+		printf("close the connection to client!\n");
+                return;
             case 2:
                 // Customer
                 customer_operation_handler(connectionFileDescriptor);
-                break;
+                printf("close the connection to client!\n");
+                return;
             case 3: 
                 student_operation_handler(connectionFileDescriptor);
-                break;
-	    case 4: 
-               printf("close the connection to client!\n");
-	    return;
+                printf("close the connection to client!\n");
+                return;
             default:
                writeBytes = write(connectionFileDescriptor, "incorrect option", 16);
                 break;
             }
 	 }
-        }
-    }
+      }
+   }
 }

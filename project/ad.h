@@ -48,7 +48,7 @@ while (1)
       //          delete_account(connFD);
                 break;
             case 6:
-              close(connFD);break;
+              return true;
             default:
                 writeBytes = write(connFD, "incorrect option", 16);
                 break;
