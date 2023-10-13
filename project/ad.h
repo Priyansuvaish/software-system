@@ -238,7 +238,7 @@ bool get_account_details(int connFD,int type, struct professor  *p,struct studen
     }
 
     bzero(writeBuffer, sizeof(writeBuffer));
-    sprintf(writeBuffer, "Account Details - \n\tID : %d\n\tNAME : %s\n\tAGE : %d\n\tStatus : %d", acc.id, acc.name, acc.age,acc.active);
+    sprintf(writeBuffer, "Account Details - \n\tID : %d\n\tNAME : %s\n\tAGE : %d\n\tStatus : %d\n\tcourse enrolled left : %d", acc.id, acc.name, acc.age,acc.active,acc.count);
     
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
 //    readBytes = read(connFD, readBuffer, sizeof(readBuffer)); // Dummy read

@@ -122,7 +122,8 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
             if (strcmp(readBuffer, "root") == 0)
             {
                  return true;
-            }
+            }bzero(writeBuffer, sizeof(writeBuffer));
+        writeBytes = write(connFD, "INVALID_PASSWORD", 16);
         }
         if(type == 2)
         { 
@@ -130,7 +131,8 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
             {
                 *proff =p;
                 return true;
-            }
+            }bzero(writeBuffer, sizeof(writeBuffer));
+        writeBytes = write(connFD, "INVALID_PASSWORD", 16);
         }
         if (type == 3)
         {
@@ -138,12 +140,10 @@ bool login_handler(int type, int connFD,struct professor *proff,struct student *
             {
                 *sd=s;
                 return true;
-            }
-        }
-        else{
-        bzero(writeBuffer, sizeof(writeBuffer));
+            }bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD, "INVALID_PASSWORD", 16);
         }
+        
     }
     else
     {
